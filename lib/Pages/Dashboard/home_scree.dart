@@ -15,9 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int index = 0;
-  final drawerKey = GlobalKey<DrawerControllerState>();
 
-  // Updated method for getting app bar title
   String appBarTitle() {
     switch (index) {
       case 0:
@@ -33,15 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Updated method for fetching the current widget
   Widget getCurrentWidget(int index) {
     switch (index) {
       case 0:
-        return RegisterScreen();
+        return const RegisterScreen();
       case 1:
-        return MarkAttendancePage();
+        return const MarkAttendancePage();
       case 2:
-        return ViewAttendancePage(context);
+        return ViewAttendancePage();
       case 3:
         return const StudentDetails();
       default:
@@ -49,23 +46,53 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         elevation: 0.0,
         scrolledUnderElevation: 0.0,
-        title: Text(appBarTitle()),
+        centerTitle: true,
+        title: Text(
+          appBarTitle(),
+          style: const TextStyle(
+            fontSize: 24,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
+          icon: const Icon(
+            Icons.menu,
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                softBlue,
+                Colors.blueAccent.withOpacity(0.3),
+              ],
+            ),
+          ),
+        ),
       ),
       drawer: _buildDrawer(context),
-      body:
-          getCurrentWidget(index), // Directly calling the method for the widget
+      body: getCurrentWidget(index),
     );
   }
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      key: drawerKey,
       surfaceTintColor: blueColor,
       backgroundColor: whiteColor,
       child: Column(
@@ -84,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   index == 0,
                   () {
                     setState(() {
-                      index = 0; // Fixed the index to 0 for Register Student
+                      index = 0;
                     });
                     Navigator.pop(context);
                   },
@@ -96,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   index == 1,
                   () {
                     setState(() {
-                      index = 1; // Corrected index for Mark Attendance
+                      index = 1;
                     });
                     Navigator.pop(context);
                   },
@@ -108,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   index == 2,
                   () {
                     setState(() {
-                      index = 2; // Corrected index for View Attendance
+                      index = 2;
                     });
                     Navigator.pop(context);
                   },

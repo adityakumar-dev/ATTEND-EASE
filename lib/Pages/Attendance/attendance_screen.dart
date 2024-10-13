@@ -1,4 +1,5 @@
 import 'package:attend_ease/Models/student_model.dart';
+import 'package:attend_ease/Utils/ui_helper.dart';
 import 'package:attend_ease/services/providers/attendance_provider.dart';
 import 'package:attend_ease/services/providers/student_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,7 @@ import 'package:provider/provider.dart';
 
 class AttendanceScreen extends StatefulWidget {
   static const String rootName = "AttendanceScreen";
-  final args; // Typing for args (Map)
+  final args;
   const AttendanceScreen({super.key, required this.args});
 
   @override
@@ -31,12 +32,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     dateTime = widget.args['date']!.toString().split(' ')[0];
     subject = widget.args['subject'];
 
-    // Fetch the student list for the selected department and year
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         stl = Provider.of<StudentListProvider>(context, listen: false);
-        studentList =
-            stl.studentData[year]!.where((st) => st.department == dep).toList();
+        if (stl.studentData[year] != null) {
+          studentList = stl.studentData[year]!
+                  .where((st) => st.department == dep)
+                  .toList() ??
+              [];
+        }
+        if (studentList.isEmpty) {
+          studentList = [];
+        }
         isPresent = List.generate(studentList.length, (index) => null);
         isLoading = false;
       });
@@ -47,43 +54,49 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Mark Attendance - $dep ($year)"),
-        backgroundColor: Colors.teal,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDateAndInfo(),
-            const SizedBox(height: 20),
-            _buildStudentList(),
-            const SizedBox(height: 20),
-            _buildMarkAttendanceButton(),
-          ],
+        title: Text(
+          "${subject.toUpperCase()} | ${dep.toUpperCase()} | $year",
+          style: kTextStyle(ksize16, whiteColor, true),
+        ),
+        backgroundColor: softBlue,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: whiteColor,
+          ),
         ),
       ),
+      body: studentList.isNotEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDateAndInfo(),
+                  const SizedBox(height: 20),
+                  _buildStudentList(),
+                  const SizedBox(height: 20),
+                  _buildMarkAttendanceButton(),
+                ],
+              ),
+            )
+          : const Center(
+              child: Text("Student List is empty"),
+            ),
     );
   }
 
   Widget _buildDateAndInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
           "Date: $dateTime",
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          "Students List",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.teal,
+            color: Colors.black87,
           ),
         ),
       ],
@@ -122,7 +135,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         itemBuilder: (context, index) {
           Student student = studentList[index];
           return Card(
-            elevation: 4,
+            elevation: 6,
+            shadowColor: softBlue,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
@@ -135,11 +149,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
+                  color: blackColor,
                 ),
               ),
               subtitle: Text(
-                "Roll Number : ${student.rollNumber}",
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                "Roll Number: ${student.rollNumber}",
+                style: const TextStyle(fontSize: 14, color: greyColor),
               ),
             ),
           );
@@ -153,13 +168,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.teal),
+          color: lavender,
+          border: Border.all(color: softBlue),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           isPresent[index] != null ? isPresent[index]! : "Choose Action",
           style: TextStyle(
-            color: isPresent[index] != null ? Colors.teal : Colors.black54,
+            color: isPresent[index] != null ? coral : Colors.black54,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -192,22 +208,33 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       child: ElevatedButton(
         onPressed: () {
           _markAttendance();
-          // final AttendanceProvider provider =
-          //     Provider.of<AttendanceProvider>(context);
-          // provider.addAttendance(DateTime.parse(dateTime), , subject, isPresent)
-          final attendanceProvider = Provider.of<AttendanceProvider>(context);
-          for (int i = 0; i < studentList.length; i++) {}
+          final AttendanceProvider attendanceProvider =
+              Provider.of<AttendanceProvider>(context, listen: false);
+          for (int i = 0; i < studentList.length; i++) {
+            attendanceProvider.addAttendance(
+              DateTime.parse(dateTime),
+              studentList[i],
+              subject,
+              isPresent[i] ?? "Absent",
+            );
+          }
         },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          backgroundColor: Colors.teal,
+          backgroundColor: softBlue,
+          shadowColor: Colors.black45,
+          elevation: 8,
         ),
         child: const Text(
           "Mark Attendance",
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(
+            fontSize: 16,
+            color: whiteColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -215,9 +242,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   void _markAttendance() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Attendance marked successfully!"),
-        backgroundColor: Colors.green,
+      SnackBar(
+        content: const Text("Attendance marked successfully!"),
+        backgroundColor: lightGreen,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }

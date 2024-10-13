@@ -28,7 +28,7 @@ class AttendanceProvider extends ChangeNotifier {
   // }
 
   void addAttendance(
-      DateTime date, Student st, String subject, bool isPresent) {
+      DateTime date, Student st, String subject, String isPresent) {
     if (_attendanceList[date] == null) {
       _attendanceList[date] = [];
     }
@@ -40,6 +40,8 @@ class AttendanceProvider extends ChangeNotifier {
       _attendanceList[date]![index].subject[subject] = isPresent;
     } else {
       _attendanceList[date]!.add(AttendanceModel(
+        name: st.name,
+        rollNumber: st.rollNumber,
         year: st.year,
         department: st.department,
         studentId: st.uniqueId,

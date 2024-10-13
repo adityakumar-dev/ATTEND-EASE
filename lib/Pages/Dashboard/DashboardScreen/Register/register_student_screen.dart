@@ -1,4 +1,5 @@
 import 'package:attend_ease/Models/student_model.dart';
+import 'package:attend_ease/Utils/ui_helper.dart';
 import 'package:attend_ease/services/providers/current_stl_list.dart';
 import 'package:attend_ease/services/providers/student_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,8 @@ class _RegisterStudentScreenState extends State<RegisterStudentScreen> {
 
   TextEditingController name = TextEditingController();
   TextEditingController rollNumber = TextEditingController();
-
+  String nameValue = "";
+  String rollValue = "";
   @override
   void dispose() {
     // Dispose controllers to avoid memory leaks
@@ -51,79 +53,62 @@ class _RegisterStudentScreenState extends State<RegisterStudentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Register Student"),
+        centerTitle: true,
+        title: Text(
+          "Register Student",
+          style: kTextStyle(ksize24, whiteColor, true),
+        ),
+        leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_ios,
+              color: whiteColor,
+            )),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [softBlue, Colors.blueAccent.withOpacity(0.3)])),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
-            TextField(
-              decoration: const InputDecoration(labelText: 'Name'),
-              controller: name,
-            ),
-            TextField(
-              controller: rollNumber,
-              decoration: const InputDecoration(labelText: 'Roll Number'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(
-              width: size.width,
-              child: DropdownButtonFormField<String>(
-                value: selectedYear,
-                hint: const Text('Select Year'),
-                items: List.generate(
-                  years.length,
-                  (index) => DropdownMenuItem(
-                    value: years[index],
-                    child: Text(years[index]),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    selectedYear = value;
-                  });
-                },
-                validator: (value) =>
-                    value == null ? 'Please select a year' : null,
-              ),
-            ),
-            SizedBox(
-              width: size.width,
-              child: DropdownButtonFormField<String>(
-                value: selectedDept,
-                hint: const Text('Select Department'),
-                items: List.generate(
-                  dep.length,
-                  (index) => DropdownMenuItem(
-                    value: dep[index],
-                    child: Text(dep[index]),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    selectedDept = value;
-                  });
-                },
-                validator: (value) =>
-                    value == null ? 'Please select a department' : null,
-              ),
-            ),
-            const SizedBox(height: 20),
+            _buildNameField(softBlue),
+            height10,
+            _buildRollNumberField(greenColor),
+            height10,
+            _buildDropdownField("Select Year", selectedYear, years, (value) {
+              setState(() {
+                selectedYear = value;
+              });
+            }, Colors.orange),
+            height10,
+            _buildDropdownField("Select Department", selectedDept, dep,
+                (value) {
+              setState(() {
+                selectedDept = value;
+              });
+            }, Colors.purple),
+            heightBox(20),
             ElevatedButton(
-              onPressed: rollNumber.text.isNotEmpty &&
-                      name.text.isNotEmpty &&
+              style: ElevatedButton.styleFrom(
+                // primary: softBlue,
+                // onPrimary: whiteColor,
+                backgroundColor: softBlue,
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onPressed: rollValue.isNotEmpty &&
+                      nameValue.isNotEmpty &&
                       selectedDept != null &&
                       selectedYear != null
                   ? () {
                       // Add student to the provider
-                      // final CurrentStlList currentList =
-                      //     Provider.of<CurrentStlList>(context, listen: false);
-                      // final index = currentList.deptList
-                      //     .indexWhere((el) => el == _selectedDepartment);
-                      // if (index == -1) {
-                      //   currentList.addDeptList(_selectedDepartment!);
-                      // }
-
                       Provider.of<StudentListProvider>(context, listen: false)
                           .addStudent(
                               selectedYear!,
@@ -138,11 +123,105 @@ class _RegisterStudentScreenState extends State<RegisterStudentScreen> {
                       Navigator.pop(context);
                     }
                   : null,
-              child: const Text('Add Student'),
+              child: Text(
+                'Add Student',
+                style: kTextStyle(
+                    ksize16,
+                    rollValue.isNotEmpty &&
+                            nameValue.isNotEmpty &&
+                            selectedDept != null &&
+                            selectedYear != null
+                        ? whiteColor
+                        : blackColor,
+                    true),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInputField(
+      String label, TextEditingController controller, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: softBlue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(borderSide: BorderSide.none),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNameField(Color color) {
+    return TextField(
+      controller: name,
+      onChanged: (v) {
+        setState(() {
+          nameValue = v;
+        });
+      },
+      decoration: InputDecoration(
+        labelText: 'Student Name',
+        enabledBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: whiteColor,
+            ),
+            borderRadius: BorderRadius.circular(12)),
+        border: const OutlineInputBorder(borderSide: BorderSide.none),
+        filled: true,
+        fillColor: color.withOpacity(0.1),
+      ),
+      // keyboardType: TextInputType.number,
+    );
+  }
+
+  Widget _buildRollNumberField(Color color) {
+    return TextField(
+      onChanged: (v) {
+        setState(() {
+          rollValue = v;
+        });
+      },
+      controller: rollNumber,
+      decoration: InputDecoration(
+        labelText: 'Roll Number',
+        border: const OutlineInputBorder(borderSide: BorderSide.none),
+        filled: true,
+        fillColor: color.withOpacity(0.1),
+      ),
+      keyboardType: TextInputType.number,
+    );
+  }
+
+  Widget _buildDropdownField(String hint, String? value, List<String> items,
+      ValueChanged<String?> onChanged, Color color) {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: "Select Year",
+        fillColor: color.withOpacity(0.1),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      value: value,
+      hint: Text(hint),
+      items: items.map((String item) {
+        return DropdownMenuItem(
+          value: item,
+          child: Text(item),
+        );
+      }).toList(),
+      onChanged: onChanged,
     );
   }
 }

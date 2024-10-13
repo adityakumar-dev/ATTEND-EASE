@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:attend_ease/Models/student_model.dart';
 import 'package:attend_ease/Utils/ui_helper.dart';
 import 'package:attend_ease/services/providers/current_stl_list.dart';
@@ -76,10 +78,14 @@ class _StudentDetailsState extends State<StudentDetails> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: ksize16),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    Text("Year"),
+                    Text(
+                      "Year",
+                      style: kTextStyle(ksize16, blackColor, true),
+                    ),
                     widthBox(ksize20),
                     DropdownButton<String>(
                       items: itemList,
@@ -112,10 +118,10 @@ class _StudentDetailsState extends State<StudentDetails> {
                     ),
                   ],
                 ),
-                widthBox(ksize40),
                 Row(
                   children: [
-                    Text("Department"),
+                    Text("Department",
+                        style: kTextStyle(ksize16, blackColor, true)),
                     widthBox(ksize20),
                     DropdownButton(
                         value: depListDropDown,
@@ -153,33 +159,80 @@ class _StudentDetailsState extends State<StudentDetails> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: size.height * 0.7,
+          // const SizedBox(height: 20),
+          Expanded(
             child: Consumer<CurrentStlList>(
               builder: (context, value, child) {
                 return ListView.builder(
                   itemCount: value.currentList.length,
                   itemBuilder: (context, index) {
                     final student = value.currentList[index];
+                    List<Color> colors = [
+                      softBlue,
+                      greenColor,
+                      Colors.orange,
+                      Colors.purple
+                    ];
+                    Color getCardColor() {
+                      if (index == 0) {
+                        return softBlue;
+                      }
+                      if (index == 1) {
+                        return greenColor;
+                      }
+                      if (index == 2) {
+                        return Colors.orange;
+                      }
+                      if (index == 3) {
+                        return Colors.purple;
+                      } else {
+                        return softBlue;
+                      }
+                    }
+
                     return Card(
+                      elevation: 6.0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        title: Text(student.name),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Roll Number: ${student.rollNumber}'),
-                            Text('Class: ${student.department}'),
-                            Text('Section: ${student.rollNumber}'),
-                          ],
-                        ),
-                        trailing: IconButton(
-                          onPressed: () {
-                            stl.deleteStudent(uuid: student.uniqueId);
-                            setState(() {});
-                          },
-                          icon: Icon(Icons.delete),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: ksize10, vertical: ksize10),
+                        decoration: BoxDecoration(
+                            color: getCardColor().withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          title: Text(
+                            student.name.toUpperCase(),
+                            style: kTextStyle(ksize20, whiteColor, true),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Roll Number: ${student.rollNumber}',
+                                style: kTextStyle(ksize16, whiteColor, false),
+                              ),
+                              Text(
+                                'Department: ${student.department}',
+                                style: kTextStyle(ksize16, whiteColor, false),
+                              ),
+                              Text(
+                                'Section: ${student.rollNumber}',
+                                style: kTextStyle(ksize16, whiteColor, false),
+                              ),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            onPressed: () {
+                              stl.deleteStudent(uuid: student.uniqueId);
+                              setState(() {});
+                            },
+                            icon: const Icon(
+                              Icons.delete,
+                              color: whiteColor,
+                            ),
+                          ),
                         ),
                       ),
                     );
