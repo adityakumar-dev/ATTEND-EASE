@@ -1,4 +1,5 @@
 import 'package:attend_ease/Models/student_model.dart';
+import 'package:attend_ease/services/local%20storage/local_storage_manager.dart';
 import 'package:flutter/material.dart';
 
 class CurrentStlList extends ChangeNotifier {
@@ -14,16 +15,35 @@ class CurrentStlList extends ChangeNotifier {
 
   void setList(List<Student> stl) {
     _currentStudentList = stl;
+
+    // LocalStorageManager.storeCurrentStl(
+    //     _currentStudentList, deptList, subjectList);
     notifyListeners();
   }
 
   void addYearList(String name) {
     _yearList.add(name);
+
+    LocalStorageManager.storeCurrentStl(
+        _currentStudentList, deptList, _yearList, subjectList);
+    notifyListeners();
+  }
+
+  void setSubjects(Map<String, List<String>> map) {
+    _subjectList = map;
+    notifyListeners();
+  }
+
+  void setYears(List<String> list) {
+    _yearList = list;
     notifyListeners();
   }
 
   void addDeptList(String name) {
     _deptList.add(name);
+
+    LocalStorageManager.storeCurrentStl(
+        _currentStudentList, deptList, _yearList, subjectList);
     notifyListeners();
   }
 
@@ -32,11 +52,17 @@ class CurrentStlList extends ChangeNotifier {
       _subjectList[dept] = [];
     }
     _subjectList[dept]!.addAll(subjects);
+
+    LocalStorageManager.storeCurrentStl(
+        _currentStudentList, deptList, _yearList, subjectList);
     notifyListeners();
   }
 
   void setDeptlist(List<String> name) {
-    _deptList.addAll(name);
+    _deptList = name;
+
+    // LocalStorageManager.storeCurrentStl(
+    //     _currentStudentList, deptList, subjectList);
     notifyListeners();
   }
 }

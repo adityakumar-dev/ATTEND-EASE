@@ -1,9 +1,15 @@
+import 'dart:io';
+
+import 'package:attend_ease/Models/image/teacherImageModel.dart';
 import 'package:attend_ease/Pages/Dashboard/DashboardScreen/mark_attendance.dart';
 import 'package:attend_ease/Pages/Dashboard/DashboardScreen/register_screen.dart';
 import 'package:attend_ease/Pages/Dashboard/DashboardScreen/student_list_screen.dart';
 import 'package:attend_ease/Pages/Dashboard/DashboardScreen/view_attendance.dart';
 import 'package:attend_ease/Utils/ui_helper.dart';
+import 'package:attend_ease/services/local%20storage/local_storage_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String rootName = "HomeScreen";
@@ -15,6 +21,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int index = 0;
+  File? selectedImage;
+  TeacherImageModel teacherImageModel = TeacherImageModel();
 
   String appBarTitle() {
     switch (index) {
@@ -47,6 +55,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final TeacherImageModel? imageModel = await getLocalImage();
+
+        if (imageModel != null && imageModel.selectedImage != null) {
+          final directory = await getApplicationDocumentsDirectory();
+          selectedImage = await File("${directory.path}/teacherImage")
+              .writeAsBytes(imageModel.selectedImage!);
+
+          setState(() {});
+        }
+      } catch (e) {
+        print("Error loading image: $e");
+      }
+    });
+  }
+
+  Future<TeacherImageModel?> getLocalImage() async {
+    return await LocalStorageManager.getTeacherImage();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,19 +193,48 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawerHeader() {
+    Future<void> selectImage() async {
+      ImagePicker imagePicker = ImagePicker();
+      final pickedImage =
+          await imagePicker.pickImage(source: ImageSource.gallery);
+      if (pickedImage != null) {
+        selectedImage = File(pickedImage.path);
+
+        final bytes = await selectedImage!.readAsBytes();
+
+        await LocalStorageManager.teacherImage(
+            TeacherImageModel(selectedImage: bytes));
+        // await TeacherImageModel.se(teacherImageModel);
+
+        setState(() {});
+      }
+    }
+
     return Container(
       padding:
           const EdgeInsets.symmetric(horizontal: ksize20, vertical: ksize50),
       color: coral,
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: whiteColor,
-            minRadius: ksize50,
-            child: Icon(
-              Icons.person,
-              color: blackColor,
-              size: 80,
+          GestureDetector(
+            onTap: selectImage,
+            child: CircleAvatar(
+              backgroundColor: whiteColor,
+              minRadius: ksize50,
+              child: selectedImage == null
+                  ? const Icon(
+                      Icons.person,
+                      color: blackColor,
+                      size: 80,
+                    )
+                  : ClipOval(
+                      child: Image.file(
+                        selectedImage!,
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                      ),
+                    ),
             ),
           ),
           widthBox(ksize10),
@@ -182,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Teacher Name",
+                "ARUN KUMAR",
                 style: kTextStyle(ksize20, whiteColor, true, changeFont: true),
               ),
               Text(

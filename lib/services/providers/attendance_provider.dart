@@ -1,5 +1,6 @@
 import 'package:attend_ease/Models/attendance_model.dart';
 import 'package:attend_ease/Models/student_model.dart';
+import 'package:attend_ease/services/local%20storage/local_storage_manager.dart';
 import 'package:flutter/material.dart';
 
 class AttendanceProvider extends ChangeNotifier {
@@ -26,6 +27,10 @@ class AttendanceProvider extends ChangeNotifier {
 
   //   notifyListeners();
   // }
+  void setAttendance(Map<DateTime, List<AttendanceModel>> map) {
+    _attendanceList = map;
+    notifyListeners();
+  }
 
   void addAttendance(
       DateTime date, Student st, String subject, String isPresent) {
@@ -49,7 +54,7 @@ class AttendanceProvider extends ChangeNotifier {
         subject: {subject: isPresent},
       ));
     }
-
+    LocalStorageManager.storeAttendanceData(attendanceList);
     notifyListeners();
   }
 

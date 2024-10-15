@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:attend_ease/Models/student_model.dart';
 import 'package:attend_ease/Utils/ui_helper.dart';
 import 'package:attend_ease/services/providers/current_stl_list.dart';
@@ -15,59 +13,86 @@ class StudentDetails extends StatefulWidget {
 }
 
 class _StudentDetailsState extends State<StudentDetails> {
-  String? yearListDropDown;
-  String? depListDropDown;
-
+  String? yearListDropDown = 'All';
+  String? depListDropDown = 'All';
+  late final StudentListProvider stl;
+  late CurrentStlList currentList;
+  List<Student> allStudent = [];
+  late List<DropdownMenuItem<String>> deptDropDownList;
+  late List<DropdownMenuItem<String>> itemList;
   @override
   void initState() {
     super.initState();
 
     // Initialize dropdowns on first load
-    final currentList = Provider.of<CurrentStlList>(context, listen: false);
 
-    if (currentList.yearList.isNotEmpty) {
-      yearListDropDown = currentList.yearList[0];
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      stl = Provider.of<StudentListProvider>(context, listen: false);
+      currentList = Provider.of<CurrentStlList>(context, listen: false);
+      if (currentList.yearList.isNotEmpty) {
+        yearListDropDown = currentList.yearList[0];
+      }
 
-    if (currentList.deptList.isNotEmpty) {
-      depListDropDown = currentList.deptList[0];
-    }
+      if (currentList.deptList.isNotEmpty) {
+        depListDropDown = currentList.deptList[0];
+      }
+      setState(() {
+        for (String st in stl.studentData.keys) {
+          // print("$st , value : ${stl.studentData[st]}");
+
+          allStudent.addAll(stl.studentData[st] ?? []);
+        }
+        // List<Student> studentWithYear = [];
+        // if (yearListDropDown != 'All') {
+        //   studentWithYear.addAll(stl.studentData[yearListDropDown] ?? []);
+        // }
+
+        deptDropDownList = List.generate(
+          currentList.deptList.length,
+          (index) => DropdownMenuItem(
+              value: currentList.deptList[index],
+              child: Text(currentList.deptList[index])),
+        );
+        itemList = List.generate(
+          currentList.yearList.length,
+          (index) {
+            return DropdownMenuItem(
+                value: currentList.yearList[index],
+                child: Text(currentList.yearList[index]));
+          },
+        );
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final StudentListProvider stl = Provider.of<StudentListProvider>(context);
+    // final size = MediaQuery.of(context).size;
 
-    List<Student> allStudent = [];
-    for (String st in stl.studentData.keys) {
-      allStudent.addAll(stl.studentData[st] ?? []);
-    }
-    final currentList = Provider.of<CurrentStlList>(context, listen: false);
-
-    if (currentList.yearList.isEmpty) {
+    if (allStudent.isEmpty) {
       return const Center(child: Text('No students available.'));
     }
 
-    List<Student> studentWithYear = [];
-    if (yearListDropDown != 'All') {
-      studentWithYear.addAll(stl.studentData[yearListDropDown] ?? []);
+    void generateList() {
+      if (yearListDropDown == 'All') {
+        if (depListDropDown != 'All') {
+          currentList.setList(allStudent
+              .where((el) => el.department == depListDropDown)
+              .toList());
+        } else {
+          currentList.setList(allStudent ?? []);
+        }
+      } else {
+        if (depListDropDown == 'All') {
+          currentList.setList(stl.studentData[yearListDropDown]!);
+        } else {
+          currentList.setList(stl.studentData[yearListDropDown]!
+                  .where((el) => el.department == depListDropDown)
+                  .toList() ??
+              []);
+        }
+      }
     }
-
-    List<DropdownMenuItem<String>> deptDropDownList = List.generate(
-      currentList.deptList.length,
-      (index) => DropdownMenuItem(
-          value: currentList.deptList[index],
-          child: Text(currentList.deptList[index])),
-    );
-    List<DropdownMenuItem<String>> itemList = List.generate(
-      currentList.yearList.length,
-      (index) {
-        return DropdownMenuItem(
-            value: currentList.yearList[index],
-            child: Text(currentList.yearList[index]));
-      },
-    );
 
     return Container(
       padding:
@@ -92,27 +117,28 @@ class _StudentDetailsState extends State<StudentDetails> {
                       onChanged: (String? value) {
                         setState(() {
                           yearListDropDown = value;
+                          generateList();
                         });
 
-                        if (yearListDropDown == 'All') {
-                          if (depListDropDown != 'All') {
-                            currentList.setList(allStudent
-                                .where((el) => el.department == depListDropDown)
-                                .toList());
-                          } else {
-                            currentList.setList(allStudent ?? []);
-                          }
-                        } else {
-                          if (depListDropDown == 'All') {
-                            currentList.setList(
-                                stl.studentData[yearListDropDown] ?? []);
-                          } else {
-                            currentList.setList(stl
-                                .studentData[yearListDropDown]!
-                                .where((el) => el.department == depListDropDown)
-                                .toList());
-                          }
-                        }
+                        // if (yearListDropDown == 'All') {
+                        //   if (depListDropDown != 'All') {
+                        //     currentList.setList(allStudent
+                        //         .where((el) => el.department == depListDropDown)
+                        //         .toList());
+                        //   } else {
+                        //     currentList.setList(allStudent ?? []);
+                        //   }
+                        // } else {
+                        //   if (depListDropDown == 'All') {
+                        //     currentList.setList(
+                        //         stl.studentData[yearListDropDown] ?? []);
+                        //   } else {
+                        //     currentList.setList(stl
+                        //         .studentData[yearListDropDown]!
+                        //         .where((el) => el.department == depListDropDown)
+                        //         .toList());
+                        //   }
+                        // }
                       },
                       value: yearListDropDown,
                     ),
@@ -129,30 +155,8 @@ class _StudentDetailsState extends State<StudentDetails> {
                         onChanged: (value) {
                           setState(() {
                             depListDropDown = value;
+                            generateList();
                           });
-
-                          if (yearListDropDown == 'All') {
-                            if (depListDropDown != 'All') {
-                              currentList.setList(allStudent
-                                  .where(
-                                      (el) => el.department == depListDropDown)
-                                  .toList());
-                            } else {
-                              currentList.setList(allStudent ?? []);
-                            }
-                          } else {
-                            if (depListDropDown == 'All') {
-                              currentList
-                                  .setList(stl.studentData[yearListDropDown]!);
-                            } else {
-                              currentList.setList(stl
-                                      .studentData[yearListDropDown]!
-                                      .where((el) =>
-                                          el.department == depListDropDown)
-                                      .toList() ??
-                                  []);
-                            }
-                          }
                         }),
                   ],
                 )
@@ -167,12 +171,12 @@ class _StudentDetailsState extends State<StudentDetails> {
                   itemCount: value.currentList.length,
                   itemBuilder: (context, index) {
                     final student = value.currentList[index];
-                    List<Color> colors = [
-                      softBlue,
-                      greenColor,
-                      Colors.orange,
-                      Colors.purple
-                    ];
+                    // List<Color> colors = [
+                    //   softBlue,
+                    //   greenColor,
+                    //   Colors.orange,
+                    //   Colors.purple
+                    // ];
                     Color getCardColor() {
                       if (index == 0) {
                         return softBlue;
@@ -204,33 +208,35 @@ class _StudentDetailsState extends State<StudentDetails> {
                         child: ListTile(
                           title: Text(
                             student.name.toUpperCase(),
-                            style: kTextStyle(ksize20, whiteColor, true),
+                            style: kTextStyle(ksize20, blackColor, true),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Roll Number: ${student.rollNumber}',
-                                style: kTextStyle(ksize16, whiteColor, false),
+                                style: kTextStyle(ksize16, blackColor, false),
                               ),
                               Text(
                                 'Department: ${student.department}',
-                                style: kTextStyle(ksize16, whiteColor, false),
+                                style: kTextStyle(ksize16, blackColor, false),
                               ),
                               Text(
                                 'Section: ${student.rollNumber}',
-                                style: kTextStyle(ksize16, whiteColor, false),
+                                style: kTextStyle(ksize16, blackColor, false),
                               ),
                             ],
                           ),
                           trailing: IconButton(
                             onPressed: () {
                               stl.deleteStudent(uuid: student.uniqueId);
-                              setState(() {});
+                              setState(() {
+                                generateList();
+                              });
                             },
                             icon: const Icon(
                               Icons.delete,
-                              color: whiteColor,
+                              color: blackColor,
                             ),
                           ),
                         ),

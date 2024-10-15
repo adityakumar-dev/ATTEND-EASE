@@ -1,8 +1,15 @@
 import 'package:attend_ease/Models/student_model.dart';
+import 'package:attend_ease/services/local%20storage/local_storage_manager.dart';
 import 'package:flutter/material.dart';
 
 class StudentListProvider extends ChangeNotifier {
-  final Map<String, List<Student>> _studentData = {};
+  Map<String, List<Student>> _studentData = {};
+
+  void setStudentList(Map map) {
+    _studentData = map as Map<String, List<Student>>;
+    notifyListeners();
+  }
+
   Map<String, List<Student>> get studentData => _studentData;
   void addStudent(String year, Student st) {
     if (_studentData[year] == null) {
@@ -15,6 +22,7 @@ class StudentListProvider extends ChangeNotifier {
       _studentData[year]?.add(st);
     }
 
+    LocalStorageManager.storeStudentList(studentData);
     notifyListeners();
   }
 
@@ -35,5 +43,6 @@ class StudentListProvider extends ChangeNotifier {
         _studentData[key]?[index] = updatedStudent;
       }
     }
+    LocalStorageManager.storeStudentList(studentData);
   }
 }
