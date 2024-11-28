@@ -8,6 +8,7 @@ import 'package:attend_ease/services/local%20storage/local_storage_manager.dart'
 import 'package:attend_ease/services/providers/attendance_provider.dart';
 import 'package:attend_ease/services/providers/current_stl_list.dart';
 import 'package:attend_ease/services/providers/student_list_provider.dart';
+import 'package:attend_ease/services/providers/user_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +40,14 @@ class _SplashScreenState extends State<SplashScreen> {
           Provider.of<CurrentStlList>(context, listen: false);
       final AttendanceProvider attendanceList =
           Provider.of<AttendanceProvider>(context, listen: false);
+      final userDetilsProvider =
+          Provider.of<UserStateProvider>(context, listen: false);
+      if (data['userName'] != null) {
+        userDetilsProvider.updateName(data['userName']);
+      }
+      if (data['position'] != null) {
+        userDetilsProvider.updatePositions(data['position']);
+      }
       if (data['studentList'] != '{}') {
         // print("data is : ${data['studentList']}");
         final Map<String, List<Student>> studentData =
@@ -121,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              "ATTEND EASE",
+              "ATTENDANCE",
               style: kTextStyle(ksize32, whiteColor, true),
             ),
             heightBox(ksize10),

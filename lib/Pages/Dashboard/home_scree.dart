@@ -7,9 +7,11 @@ import 'package:attend_ease/Pages/Dashboard/DashboardScreen/student_list_screen.
 import 'package:attend_ease/Pages/Dashboard/DashboardScreen/view_attendance.dart';
 import 'package:attend_ease/Utils/ui_helper.dart';
 import 'package:attend_ease/services/local%20storage/local_storage_manager.dart';
+import 'package:attend_ease/services/providers/user_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String rootName = "HomeScreen";
@@ -66,8 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
           final directory = await getApplicationDocumentsDirectory();
           selectedImage = await File("${directory.path}/teacherImage")
               .writeAsBytes(imageModel.selectedImage!);
-
-          setState(() {});
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {});
+          });
         }
       } catch (e) {
         print("Error loading image: $e");
@@ -193,6 +196,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawerHeader() {
+    showInputDailog(
+        String title, String description, Function(String txt) onDone) {
+      TextEditingController controller = TextEditingController();
+      return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            title,
+            style: kTextStyle(ksize16, blackColor, false),
+          ),
+          content: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                description,
+                style: kTextStyle(ksize12, greyColor, false),
+              ),
+              heightBox(ksize10),
+              TextField(
+                controller: controller,
+              )
+            ],
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () => onDone(controller.text),
+              child: Text(
+                "Okay",
+                style: kTextStyle(ksize12, blackColor, false),
+              ),
+            )
+          ],
+        ),
+      );
+    }
+
+    final provider = Provider.of<UserStateProvider>(context);
     Future<void> selectImage() async {
       ImagePicker imagePicker = ImagePicker();
       final pickedImage =
@@ -215,6 +256,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const EdgeInsets.symmetric(horizontal: ksize20, vertical: ksize50),
       color: coral,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: selectImage,
@@ -240,14 +283,47 @@ class _HomeScreenState extends State<HomeScreen> {
           widthBox(ksize10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "ARUN KUMAR",
-                style: kTextStyle(ksize20, whiteColor, true, changeFont: true),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    provider.userName,
+                    style:
+                        kTextStyle(ksize16, whiteColor, true, changeFont: true),
+                  ),
+                  widthBox(ksize10),
+                  IconButton(
+                      onPressed: () => showInputDailog(
+                              "Teacher", "Enter your name", (String txt) async {
+                            provider.updateName(txt);
+                            await LocalStorageManager.storeTeacherName(txt);
+                            Navigator.pop(context);
+                          }),
+                      icon: const Icon(Icons.edit, size: ksize16))
+                ],
               ),
-              Text(
-                "H.O.D",
-                style: kTextStyle(ksize14, whiteColor, true),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    provider.userPosition,
+                    style: kTextStyle(ksize14, whiteColor, true),
+                  ),
+                  widthBox(ksize10),
+                  IconButton(
+                      onPressed: () =>
+                          showInputDailog("Position", "Enter your position",
+                              (String txt) async {
+                            provider.updatePositions(txt);
+                            await LocalStorageManager.storeTeacherPosition(txt);
+                            Navigator.pop(context);
+                          }),
+                      icon: const Icon(Icons.edit))
+                ],
               ),
             ],
           ),

@@ -85,7 +85,19 @@ class LocalStorageManager {
     data[_depList] = jsonDecode(box.get(_depList, defaultValue: '[]'));
     data[_subjectList] = jsonDecode(box.get(_subjectList, defaultValue: '{}'));
     data[_yearList] = jsonDecode(box.get(_yearList, defaultValue: '[]'));
+    data['userName'] = box.get('userName', defaultValue: "Teacher Name");
+    data['position'] = box.get('position', defaultValue: "Position");
 
     return data;
+  }
+
+  static Future storeTeacherName(txt) async {
+    final box = await _getBox();
+    box.put('userName', txt);
+  }
+
+  static Future storeTeacherPosition(txt) async {
+    final box = await _getBox();
+    box.put('position', txt);
   }
 }

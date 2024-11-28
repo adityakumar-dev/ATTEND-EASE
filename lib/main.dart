@@ -7,6 +7,7 @@ import 'package:attend_ease/services/providers/attendance_provider.dart';
 import 'package:attend_ease/services/providers/current_stl_list.dart';
 import 'package:attend_ease/services/providers/home_page_handler.dart';
 import 'package:attend_ease/services/providers/student_list_provider.dart';
+import 'package:attend_ease/services/providers/user_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +39,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => CurrentStlList(),
-        )
+        ),
+        ChangeNotifierProvider(
+          create: (context) => UserStateProvider(),
+        ),
       ],
       child: const MaterialApp(
         title: 'ATTEND EASE',
